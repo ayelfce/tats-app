@@ -3,6 +3,71 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 
+//  sonradan eklenen kodlar
+import 'dart:convert'; // JSON işlemleri için
+import 'package:http/http.dart' as http; // HTTP istekleri için
+
+Future<void> sendImageToRoboflow(String imagePath,  Function(List<Map<String, String>>) updateData) async {
+  const String apiUrl = "https://detect.roboflow.com";
+  const String apiKey = "EJcCn6LTSrJ4jUMPjFnW"; // Kendi API anahtarınızı buraya ekleyin
+  const String modelId = "food-k7fpo/2"; // Model kimliğiniz
+  
+  try {
+    // Görsel dosyasını okuma
+    final file = File(imagePath);
+
+    // HTTP isteği oluşturma
+    final uri = Uri.parse('$apiUrl/$modelId?api_key=$apiKey');
+    final request = http.MultipartRequest('POST', uri)
+      ..files.add(await http.MultipartFile.fromPath('file', imagePath));
+
+    // Yanıtı bekleme
+    final response = await request.send();
+
+    // Yanıtı işleme
+    if (response.statusCode == 200) {
+      final responseBody = await response.stream.bytesToString();
+      final result = jsonDecode(responseBody);
+
+      if (result.containsKey('predictions')) {
+        List<Map<String, String>> foodList = [];
+        for (var prediction in result['predictions']) {
+          foodList.add({
+            'foodName': prediction['class'],
+            'confidence': prediction['confidence'].toString(),
+          });
+        }
+
+        print(result['predictions']);
+        // Tabloyu güncelleme
+        updateData(foodList);
+      }
+    } else {
+      print("Hata: ${response.statusCode}, ${response.reasonPhrase}");
+    }
+
+  } catch (e) {
+    print("Bir hata oluştu: $e");
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//  elifin bolumu
 Future<void> requestPermissions() async {
   var cameraStatus = await Permission.camera.request();
   var galleryStatus = await Permission.photos.request();
@@ -48,6 +113,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final ImagePicker _picker = ImagePicker();
   String? _imagePath;
+  List<Map<String, String>> _foodResults = [];
 
   Future<void> _pickImageFromGallery() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
@@ -119,6 +185,22 @@ class _MyHomePageState extends State<MyHomePage> {
               },
               child: const Text("Kamera ile çek"),
             ),
+            ElevatedButton(
+              onPressed: () async {
+                if (_imagePath != null) {
+                  await sendImageToRoboflow(_imagePath!, (List<Map<String, String>> foodList) {
+                    setState(() {
+                      _foodResults = foodList;
+                    });
+                  });
+                } else {
+                  print("Lütfen önce bir görsel seçin.");
+                }
+              },
+              child: Text("Görseli Gönder"),
+            ),
+
+            
 
             SizedBox(height: 20),
             if (_imagePath != null)
@@ -127,6 +209,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Image.file(
                     File(_imagePath!)),
               ),
+              
             Padding(
               padding: const EdgeInsets.symmetric(
                   horizontal: 20.0),
@@ -166,27 +249,27 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ]),
 
-                  for (int i = 0; i < 7; i++)
+                  for (var result in _foodResults)
                     TableRow(children: [
                       Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Text('Row ${i + 1} Col 1'),
+                        child: Text('1'), // Örneğin, adet sabit bir değer olabilir
                       ),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Text('Row ${i + 1} Col 2'),
+                        child: Text(result['foodName'] ?? 'Bilinmiyor'),
                       ),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Text('Row ${i + 1} Col 3'),
+                        child: Text('Türü'), // Türü burada yerleştirebilirsiniz
                       ),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Text('Row ${i + 1} Col 4'),
+                        child: Text('Kalori'), // Kalori bilgisi burada yerleştirilebilir
                       ),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Text('Row ${i + 1} Col 5'),
+                        child: Text('Fiyat'), // Fiyat bilgisi burada yerleştirilebilir
                       ),
                     ]),
                 ],
@@ -310,4 +393,4 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-}
+} 
