@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import 'package:camera/camera.dart';
+
 //  sonradan eklenen kodlar
 import 'dart:convert'; // JSON işlemleri için
 import 'package:http/http.dart' as http; // HTTP istekleri için
@@ -11,8 +12,8 @@ Future<void> sendImageToRoboflow(String imagePath,  Function(List<Map<String, St
 
   const String apiUrl = "https://detect.roboflow.com";
   const String apiKey = "EJcCn6LTSrJ4jUMPjFnW"; // Kendi API anahtarınızı buraya ekleyin
-  const String modelId = "food-k7fpo/2"; // Model kimliğiniz
-  
+  const String modelId = "food-k7fpo/3"; // Model kimliğiniz
+ 
   try {
     // Görsel dosyasını okuma
     final file = File(imagePath);
