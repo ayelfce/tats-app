@@ -33,16 +33,32 @@ Future<void> sendImageToRoboflow(String imagePath,  Function(List<Map<String, St
 
       if (result.containsKey('predictions')) {
         List<Map<String, String>> foodList = [];
+        
         for (var prediction in result['predictions']) {
-          foodList.add({
+          if (foodList.any((product) => product['class_id'].toString() == prediction['class_id'].toString())) {
+            // İlgili elemanı bul ve total değerini artır
+            for (var product in foodList) {
+              if (product['class_id'].toString() == prediction['class_id'].toString()) {
+                product['total'] = (int.parse(product['total'] ?? '1') + 1).toString(); // Eğer 'total' yoksa varsayılan olarak 1 alır
+                break; // İlk eşleşmeyi bulduktan sonra döngüyü sonlandır
+              }
+            }
+          }
+          else {
+            foodList.add({
+            'class_id': prediction['class_id'].toString(),
             'foodName': prediction['class'],
             'confidence': prediction['confidence'].toString(),
+            'total': "1",
           });
+          }
+          
         }
 
         print(result['predictions']);
         // Tabloyu güncelleme
         updateData(foodList);
+        print(foodList);
       }
     } else {
       print("Hata: ${response.statusCode}, ${response.reasonPhrase}");
@@ -242,11 +258,15 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ]),
 
+                  
+
+
+
                   for (var result in _foodResults)
                     TableRow(children: [
                       Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Text('1'), // Örneğin, adet sabit bir değer olabilir
+                        child: Text(result['total'] ?? 'Bilinmiyor'), // Örneğin, adet sabit bir değer olabilir
                       ),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
