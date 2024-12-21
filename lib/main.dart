@@ -480,7 +480,7 @@ Future<void> sendImageToRoboflow(String imagePath, Function(String,String) menuT
         List<Map<String, String>> foodList = [];
 
         for (var prediction in result['predictions']) {
-          if (prediction['confidence'] < 0.5) {
+          if (prediction['confidence'] < 0.65) {
             continue;
           }
           String classId = prediction['class_id'].toString() ?? '';
