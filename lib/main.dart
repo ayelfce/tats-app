@@ -455,7 +455,7 @@ Future<Map<String, Map<String, String>>> loadExcelData() async {
 Future<void> sendImageToRoboflow(String imagePath, Function(String,String) menuType, Function(List<Map<String, String>>) updateData) async {
   const String apiUrl = "https://detect.roboflow.com";
   const String apiKey = "EJcCn6LTSrJ4jUMPjFnW";
-  const String modelId = "food-k7fpo/3";
+  const String modelId = "food-k7fpo/5";
 
   try {
     final file = File(imagePath);
@@ -480,7 +480,7 @@ Future<void> sendImageToRoboflow(String imagePath, Function(String,String) menuT
         List<Map<String, String>> foodList = [];
 
         for (var prediction in result['predictions']) {
-          if (prediction['confidence'] < 0.65) {
+          if (prediction['confidence'] < 0.50) {
             continue;
           }
           String classId = prediction['class_id'].toString() ?? '';
